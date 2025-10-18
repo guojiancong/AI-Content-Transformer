@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>AI Content Transformer</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="index.css">
+    <script type="importmap">
+      {
+        "imports": {
+          "@google/genai": "https://esm.run/@google/genai"
+        }
+      }
+    </script>
+    <script type="module" src="index.tsx"></script>
+  </head>
+  <body>
+    <main>
+      <header>
+        <h1>AI Content Transformer</h1>
+        <div class="header-actions">
+          <button type="button" id="closeFileButton" class="icon-button hidden" aria-label="Close File">&times;</button>
+          <button type="button" id="toc-toggle-button" class="icon-button" aria-label="Open Table of Contents">☰</button>
+          <button type="button" id="settingsButton" class="icon-button" aria-label="Open Settings">⚙️</button>
+        </div>
+      </header>
+      
+      <section id="intro-section">
+        <p>Select a <code>.txt</code> file to automatically generate a table of contents, then transform its content chapter by chapter.</p>
+        <div class="action-buttons">
+          <input type="file" id="fileInput" accept=".txt" aria-hidden="true" style="display: none;"/>
+          <label for="fileInput" class="file-button" role="button" aria-controls="fileInput">
+            Choose a File
+          </label>
+        </div>
+      </section>
+      
+      <div id="content-wrapper" class="hidden">
+        <section id="tableOfContentsSection" aria-labelledby="toc-heading">
+          <div class="toc-header">
+            <h2 id="toc-heading">Table of Contents</h2>
+            <button type="button" id="toc-close-button" class="icon-button" aria-label="Close Table of Contents">&times;</button>
+          </div>
+          <ul id="tocList"></ul>
+        </section>
+
+        <section id="chapter-content-section">
+          <div class="chapter-actions">
+             <div class="form-group">
+                <label for="modelSelector">Active Model</label>
+                <select id="modelSelector"></select>
+             </div>
+             <button type="button" id="transformButton" class="file-button" disabled>Transform This Chapter</button>
+          </div>
+          <div class="tabs">
+            <div class="tab-buttons">
+              <button type="button" class="tab-button active" id="originalTabButton">Original Chapter</button>
+              <button type="button" class="tab-button" id="transformedTabButton" disabled>Transformed Chapter</button>
+            </div>
+            <div class="tab-content">
+              <div id="originalTabPanel" class="tab-panel active">
+                <pre id="fileContent"></pre>
+              </div>
+              <div id="transformedTabPanel" class="tab-panel">
+                <pre id="transformedContent"></pre>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+    </main>
+
+    <div id="settingsPanel" class="modal-overlay" style="display: none;">
+      <div class="modal-content">
+        <h2>Settings</h2>
+        
+        <div class="form-group">
+          <label for="writerStyleInput">Writer Style</label>
+          <input type="text" id="writerStyleInput" placeholder="e.g., Ernest Hemingway, Shakespeare">
+        </div>
+
+        <div class="form-group">
+          <label for="customPromptInput">Custom AI Prompt</label>
+          <textarea id="customPromptInput" rows="5"></textarea>
+          <p class="helper-text">Use <code>{writerStyle}</code> and <code>{originalText}</code> as placeholders.</p>
+        </div>
+        
+        <hr/>
+        
+        <h3>Model Configurations</h3>
+
+        <div id="google-settings" class="settings-group">
+          <h4>Google Gemini</h4>
+          <div class="form-group">
+            <label for="geminiModelInput">Model Name</label>
+            <input type="text" id="geminiModelInput" placeholder="e.g., gemini-2.5-flash">
+          </div>
+        </div>
+        
+        <div id="openai-settings" class="settings-group">
+            <h4>OpenAI Compatible Models</h4>
+            <div id="openai-models-list"></div>
+            <button type="button" id="addOpenAiModel" class="button-secondary">Add New Model</button>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" id="closeSettingsButton" class="button-secondary">Close</button>
+          <button type="button" id="saveSettingsButton" class="button-primary">Save & Close</button>
+        </div>
+      </div>
+    </div>
+
+  </body>
+</html>

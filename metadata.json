@@ -1,0 +1,5 @@
+{
+  "name": "AI Content Transformer",
+  "description": "Open .txt files and transform their content using an AI model based on a specified writer's style.",
+  "requestFramePermissions": []
+}
