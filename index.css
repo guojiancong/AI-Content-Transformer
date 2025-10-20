@@ -191,6 +191,11 @@ h2 {
     align-items: flex-end;
 }
 
+.chapter-actions .file-button,
+.chapter-actions .button-secondary {
+    padding: 10px 16px; /* Make buttons smaller */
+}
+
 .chapter-actions .form-group {
     flex-grow: 1;
     margin-bottom: 0;
@@ -535,8 +540,9 @@ h2 {
     padding: 0;
   }
   main {
-    padding: 1rem;
-    height: 100vh;
+    padding: 0.5rem;
+    min-height: 100vh;
+    height: auto;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
@@ -550,15 +556,39 @@ h2 {
     flex-grow: 1;
     display: flex;
     flex-direction: column;
+    min-height: 0; /* Prevents flexbox overflow */
   }
   #chapter-content-section {
       flex-grow: 1;
       display: flex;
       flex-direction: column;
+      min-height: 0; /* Prevents flexbox overflow */
   }
   .chapter-actions {
-      flex-direction: column;
-      align-items: stretch;
+      flex-direction: row;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+  }
+  .chapter-actions .form-group {
+      flex: 1 1 120px; /* Grow, shrink, with a base size */
+  }
+  .chapter-actions .form-group label {
+      display: none; /* Hide label to save space */
+  }
+  .chapter-actions .file-button,
+  .chapter-actions .button-secondary {
+    flex: 0 1 auto; /* Don't grow, allow shrinking, auto width */
+    padding: 8px 12px;
+    font-size: 0.9rem;
+  }
+  .tab-button {
+    padding: 8px 10px;
+    font-size: 0.9rem;
+  }
+  #fileContent, #transformedContent {
+    padding: 0.75rem;
+    top: 0.5rem;
   }
   #toc-toggle-button {
       display: block;

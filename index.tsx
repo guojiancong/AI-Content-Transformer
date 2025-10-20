@@ -41,6 +41,7 @@ function main() {
   const transformedTabButton = document.getElementById('transformedTabButton') as HTMLButtonElement;
   const originalTabPanel = document.getElementById('originalTabPanel') as HTMLElement;
   const transformedTabPanel = document.getElementById('transformedTabPanel') as HTMLElement;
+  const nextChapterButton = document.getElementById('nextChapterButton') as HTMLButtonElement;
 
   // App State
   let chapters: { title: string; content: string }[] = [];
@@ -548,6 +549,7 @@ function main() {
       currentChapterIndex = index;
       fileContent.textContent = chapters[index].content;
       transformButton.disabled = false;
+      nextChapterButton.disabled = index >= chapters.length - 1;
       
       if (isNewSelection) {
         transformedContent.textContent = '';
@@ -570,6 +572,7 @@ function main() {
     fileContent.textContent = ''; 
     transformedContent.textContent = '';
     transformButton.disabled = true; 
+    nextChapterButton.disabled = true;
     switchTab('original'); 
     transformedTabButton.disabled = true;
     closeFileButton.classList.add('hidden');
@@ -579,6 +582,12 @@ function main() {
   }
 
   closeFileButton.addEventListener('click', resetState);
+
+  nextChapterButton.addEventListener('click', () => {
+      if (currentChapterIndex >= 0 && currentChapterIndex < chapters.length - 1) {
+          displayChapter(currentChapterIndex + 1);
+      }
+  });
 
   // --- AI Transformation Logic ---
   async function transformWithGemini(prompt: string, modelName: string, apiKey: string): Promise<string> {
