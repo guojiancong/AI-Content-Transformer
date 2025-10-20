@@ -72,22 +72,13 @@ h1 {
   text-align: left;
 }
 
-h2, h3, h4 {
+h2 {
    color: var(--primary-color);
    text-align: left;
    border-bottom: 1px solid var(--border-color);
    padding-bottom: 0.5rem;
    margin-top: 2rem;
 }
-h3 { margin-top: 1.5rem; }
-h4 { 
-  margin-top: 1rem;
-  border-bottom: none;
-  font-size: 1rem;
-  color: var(--text-color);
-  font-weight: 600;
-}
-
 
 #intro-section p {
   margin-bottom: 2rem;
@@ -102,6 +93,26 @@ h4 {
   gap: 1rem;
   flex-wrap: wrap;
   margin-bottom: 2rem;
+  align-items: flex-end;
+}
+
+.action-buttons .form-group {
+    margin-bottom: 0;
+    text-align: left;
+}
+
+.action-buttons .form-group label {
+    font-size: 0.9rem;
+}
+
+#encodingSelector {
+    padding: 11px;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+    font-size: 1rem;
+    background-color: var(--surface-color);
+    color: var(--text-color);
+    font-family: var(--font-family);
 }
 
 .hidden {
@@ -358,24 +369,12 @@ h4 {
   margin-top: 0.5rem;
 }
 
-
-.settings-group {
-    margin-bottom: 1rem;
-}
-
-.openai-model-form {
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    padding: 1rem;
-    margin-bottom: 1rem;
-}
 .no-models-message {
     color: #666;
     font-style: italic;
     text-align: center;
     padding: 1rem;
 }
-
 
 .modal-actions {
   display: flex;
@@ -401,14 +400,103 @@ h4 {
     background-color: var(--danger-hover-color);
 }
 
+/* Reusable Accordion Chevron */
+.accordion-chevron {
+    width: 0.7em;
+    height: 0.7em;
+    border-style: solid;
+    border-color: var(--text-color);
+    border-width: 0.15em 0.15em 0 0;
+    transform: rotate(45deg);
+    transition: transform 0.3s ease-in-out;
+}
+
+/* Settings Accordion Styles */
+.settings-accordion-item {
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    margin-bottom: 1rem;
+    overflow: hidden;
+}
+.settings-accordion-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    cursor: pointer;
+    background-color: var(--secondary-color);
+    transition: background-color 0.2s;
+}
+.settings-accordion-header:hover {
+    background-color: var(--secondary-hover-color);
+}
+.settings-accordion-header h4 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: var(--text-color);
+    font-weight: 600;
+}
+.settings-accordion-item.expanded .accordion-chevron {
+    transform: rotate(135deg);
+}
+.settings-accordion-details {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease-in-out, padding 0.4s ease-in-out;
+    padding: 0 1rem;
+}
+.settings-accordion-item.expanded .settings-accordion-details {
+    max-height: 1000px; /* A large enough value to show the content */
+    padding: 1.5rem 1rem 0.5rem 1rem;
+}
+
+
+/* OpenAI Accordion Styles */
+.openai-model-item {
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    margin-bottom: 0.5rem;
+    overflow: hidden;
+}
+.openai-model-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    background-color: var(--background-color); /* Slightly different from main accordion */
+    color: var(--text-color);
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+.openai-model-header:hover {
+    background-color: var(--secondary-color);
+}
+.model-name-display {
+    flex-grow: 1;
+}
+.openai-model-item.expanded .accordion-chevron {
+    transform: rotate(135deg);
+}
+.openai-model-details {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s ease-in-out, padding 0.35s ease-in-out;
+    padding: 0 1rem;
+}
+.openai-model-item.expanded .openai-model-details {
+    max-height: 500px; /* A large enough value to show the content */
+    padding: 1.5rem 1rem 1rem 1rem;
+}
+
 
 /* Dark Mode */
 @media (prefers-color-scheme: dark) {
   :root {
     --primary-color: #8ab4f8;
     --primary-hover-color: #a3c5f9;
-    --secondary-color: #5f6368;
-    --secondary-hover-color: #70757a;
+    --secondary-color: #3c4043;
+    --secondary-hover-color: #4a4d51;
     --background-color: #202124;
     --surface-color: #303134;
     --text-color: #e8eaed;
@@ -432,6 +520,12 @@ h4 {
   }
   .helper-text {
     color: #bdc1c6;
+  }
+  .openai-model-header {
+      background-color: #202124;
+  }
+  .openai-model-header:hover {
+      background-color: #3c4043;
   }
 }
 

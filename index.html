@@ -27,6 +27,16 @@
       <section id="intro-section">
         <p>Select a <code>.txt</code> file to automatically generate a table of contents, then transform its content chapter by chapter.</p>
         <div class="action-buttons">
+          <div class="form-group">
+            <label for="encodingSelector">File Encoding</label>
+            <select id="encodingSelector">
+              <option value="utf-8" selected>UTF-8</option>
+              <option value="gb18030">GB18030 (Simplified Chinese)</option>
+              <option value="big5">Big5 (Traditional Chinese)</option>
+              <option value="shift-jis">Shift-JIS (Japanese)</option>
+              <option value="windows-1252">Windows-1252 (Western)</option>
+            </select>
+          </div>
           <input type="file" id="fileInput" accept=".txt" aria-hidden="true" style="display: none;"/>
           <label for="fileInput" class="file-button" role="button" aria-controls="fileInput">
             Choose a File
@@ -74,33 +84,52 @@
       <div class="modal-content">
         <h2>Settings</h2>
         
-        <div class="form-group">
-          <label for="writerStyleInput">Writer Style</label>
-          <input type="text" id="writerStyleInput" placeholder="e.g., Ernest Hemingway, Shakespeare">
-        </div>
-
-        <div class="form-group">
-          <label for="customPromptInput">Custom AI Prompt</label>
-          <textarea id="customPromptInput" rows="5"></textarea>
-          <p class="helper-text">Use <code>{writerStyle}</code> and <code>{originalText}</code> as placeholders.</p>
-        </div>
-        
-        <hr/>
-        
-        <h3>Model Configurations</h3>
-
-        <div id="google-settings" class="settings-group">
-          <h4>Google Gemini</h4>
-          <div class="form-group">
-            <label for="geminiModelInput">Model Name</label>
-            <input type="text" id="geminiModelInput" placeholder="e.g., gemini-2.5-flash">
+        <div class="settings-accordion">
+          <div class="settings-accordion-item expanded">
+            <div class="settings-accordion-header">
+              <h4>Style & Prompt</h4>
+              <span class="accordion-chevron"></span>
+            </div>
+            <div class="settings-accordion-details">
+              <div class="form-group">
+                <label for="writerStyleInput">Writer Style</label>
+                <input type="text" id="writerStyleInput" placeholder="e.g., Ernest Hemingway, Shakespeare">
+              </div>
+              <div class="form-group">
+                <label for="customPromptInput">Custom AI Prompt</label>
+                <textarea id="customPromptInput" rows="5"></textarea>
+                <p class="helper-text">Use <code>{writerStyle}</code> and <code>{originalText}</code> as placeholders.</p>
+              </div>
+            </div>
           </div>
-        </div>
-        
-        <div id="openai-settings" class="settings-group">
-            <h4>OpenAI Compatible Models</h4>
-            <div id="openai-models-list"></div>
-            <button type="button" id="addOpenAiModel" class="button-secondary">Add New Model</button>
+          
+          <div class="settings-accordion-item">
+            <div class="settings-accordion-header">
+              <h4>Google Gemini</h4>
+              <span class="accordion-chevron"></span>
+            </div>
+            <div class="settings-accordion-details">
+              <div class="form-group">
+                <label for="geminiModelInput">Model Name</label>
+                <input type="text" id="geminiModelInput" placeholder="e.g., gemini-2.5-flash">
+              </div>
+              <div class="form-group">
+                <label for="geminiApiKeyInput">API Key</label>
+                <input type="password" id="geminiApiKeyInput" placeholder="Enter your Gemini API Key">
+              </div>
+            </div>
+          </div>
+          
+          <div class="settings-accordion-item">
+            <div class="settings-accordion-header">
+              <h4>OpenAI Compatible Models</h4>
+              <span class="accordion-chevron"></span>
+            </div>
+            <div class="settings-accordion-details">
+              <div id="openai-models-list"></div>
+              <button type="button" id="addOpenAiModel" class="button-secondary">Add New Model</button>
+            </div>
+          </div>
         </div>
 
         <div class="modal-actions">

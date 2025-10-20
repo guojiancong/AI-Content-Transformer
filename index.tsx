@@ -7,6 +7,7 @@ import { GoogleGenAI } from "@google/genai";
 function main() {
   // DOM Elements
   const fileInput = document.getElementById('fileInput') as HTMLInputElement;
+  const encodingSelector = document.getElementById('encodingSelector') as HTMLSelectElement;
   const transformButton = document.getElementById('transformButton') as HTMLButtonElement;
   const introSection = document.getElementById('intro-section') as HTMLElement;
   const contentWrapper = document.getElementById('content-wrapper') as HTMLElement;
@@ -21,6 +22,7 @@ function main() {
   const writerStyleInput = document.getElementById('writerStyleInput') as HTMLInputElement;
   const customPromptInput = document.getElementById('customPromptInput') as HTMLTextAreaElement;
   const geminiModelInput = document.getElementById('geminiModelInput') as HTMLInputElement;
+  const geminiApiKeyInput = document.getElementById('geminiApiKeyInput') as HTMLInputElement;
   const openAIModelsListDiv = document.getElementById('openai-models-list') as HTMLDivElement;
   const addOpenAiModelButton = document.getElementById('addOpenAiModel') as HTMLButtonElement;
 
@@ -67,17 +69,21 @@ function main() {
     localStorage.setItem('writerStyle', writerStyleInput.value);
     localStorage.setItem('customPrompt', customPromptInput.value);
     localStorage.setItem('geminiModel', geminiModelInput.value);
+    localStorage.setItem('geminiApiKey', geminiApiKeyInput.value);
     
     const updatedOpenAIModels: OpenAIModelConfig[] = [];
-    const modelForms = openAIModelsListDiv.querySelectorAll('.openai-model-form');
-    modelForms.forEach(form => {
-      const id = (form.querySelector('[data-id]') as HTMLElement).dataset.id;
-      const name = (form.querySelector('[data-name]') as HTMLInputElement).value;
-      const baseUrl = (form.querySelector('[data-baseurl]') as HTMLInputElement).value;
-      const modelName = (form.querySelector('[data-modelname]') as HTMLInputElement).value;
-      const apiKey = (form.querySelector('[data-apikey]') as HTMLInputElement).value;
-      if (id && name && baseUrl && modelName) { // api key can be optional visually
-          updatedOpenAIModels.push({ id, name, baseUrl, modelName, apiKey });
+    const modelItems = openAIModelsListDiv.querySelectorAll('.openai-model-item');
+    modelItems.forEach(item => {
+      const form = item.querySelector('.openai-model-form');
+      if (form) {
+          const id = (form.querySelector('[data-id]') as HTMLElement).dataset.id;
+          const name = (form.querySelector('[data-name]') as HTMLInputElement).value;
+          const baseUrl = (form.querySelector('[data-baseurl]') as HTMLInputElement).value;
+          const modelName = (form.querySelector('[data-modelname]') as HTMLInputElement).value;
+          const apiKey = (form.querySelector('[data-apikey]') as HTMLInputElement).value;
+          if (id && name && baseUrl && modelName) { // api key can be optional visually
+              updatedOpenAIModels.push({ id, name, baseUrl, modelName, apiKey });
+          }
       }
     });
     openAIModels = updatedOpenAIModels;
@@ -93,6 +99,7 @@ function main() {
     const defaultPrompt = `Rewrite the following text in the style of {writerStyle}. Do not add any preamble or introductory text, just provide the rewritten text directly.\n\nTEXT:\n"""\n{originalText}\n"""`;
     customPromptInput.value = localStorage.getItem('customPrompt') || defaultPrompt;
     geminiModelInput.value = localStorage.getItem('geminiModel') || 'gemini-2.5-flash';
+    geminiApiKeyInput.value = localStorage.getItem('geminiApiKey') || '';
     
     try {
       openAIModels = JSON.parse(localStorage.getItem('openAIModels') || '[]');
@@ -107,39 +114,76 @@ function main() {
       openAIModelsListDiv.innerHTML = '';
       if (openAIModels.length === 0) {
           openAIModelsListDiv.innerHTML = '<p class="no-models-message">No OpenAI compatible models configured.</p>';
+      } else {
+          openAIModels.forEach(model => {
+              const modelItem = createOpenAIModelListItem(model);
+              openAIModelsListDiv.appendChild(modelItem);
+          });
       }
-      openAIModels.forEach(model => {
-          const form = createOpenAIModelForm(model);
-          openAIModelsListDiv.appendChild(form);
-      });
   }
 
-  function createOpenAIModelForm(model?: OpenAIModelConfig) {
+  function createOpenAIModelListItem(model?: OpenAIModelConfig) {
       const modelId = model?.id || `model-${Date.now()}`;
       const container = document.createElement('div');
-      container.className = 'openai-model-form';
-      container.innerHTML = `
-          <div class="form-group">
-              <label>Display Name</label>
-              <input type="text" data-name value="${model?.name || ''}" placeholder="My Llama 3">
-          </div>
-          <div class="form-group">
-              <label>API Base URL</label>
-              <input type="url" data-baseurl value="${model?.baseUrl || ''}" placeholder="https://api.example.com/v1">
-          </div>
-          <div class="form-group">
-              <label>Model Name</label>
-              <input type="text" data-modelname value="${model?.modelName || ''}" placeholder="llama3-70b-8192">
-          </div>
-          <div class="form-group">
-              <label>API Key</label>
-              <input type="password" data-apikey value="${model?.apiKey || ''}" placeholder="sk-...">
-          </div>
-          <button type="button" class="button-remove">Remove</button>
-          <span data-id="${modelId}" style="display:none;"></span>
+      container.className = 'openai-model-item';
+
+      const header = document.createElement('div');
+      header.className = 'openai-model-header';
+      header.innerHTML = `
+          <span class="model-name-display">${model?.name || 'New Model'}</span>
+          <span class="accordion-chevron"></span>
       `;
-      container.querySelector('.button-remove')?.addEventListener('click', () => {
-          if(confirm(`Are you sure you want to remove model "${model?.name || 'this model'}"?`)){
+
+      const details = document.createElement('div');
+      details.className = 'openai-model-details';
+      details.innerHTML = `
+        <div class="openai-model-form">
+            <div class="form-group">
+                <label>Display Name</label>
+                <input type="text" data-name value="${model?.name || ''}" placeholder="My Llama 3">
+            </div>
+            <div class="form-group">
+                <label>API Base URL</label>
+                <input type="url" data-baseurl value="${model?.baseUrl || ''}" placeholder="https://api.example.com/v1">
+            </div>
+            <div class="form-group">
+                <label>Model Name</label>
+                <input type="text" data-modelname value="${model?.modelName || ''}" placeholder="llama3-70b-8192">
+            </div>
+            <div class="form-group">
+                <label>API Key</label>
+                <input type="password" data-apikey value="${model?.apiKey || ''}" placeholder="sk-...">
+            </div>
+            <button type="button" class="button-remove">Remove</button>
+            <span data-id="${modelId}" style="display:none;"></span>
+        </div>
+      `;
+
+      container.appendChild(header);
+      container.appendChild(details);
+
+      header.addEventListener('click', () => {
+          const isExpanded = container.classList.contains('expanded');
+          openAIModelsListDiv.querySelectorAll('.openai-model-item.expanded').forEach(item => {
+              item.classList.remove('expanded');
+          });
+          if (!isExpanded) {
+              container.classList.add('expanded');
+          }
+      });
+
+      const nameInput = details.querySelector<HTMLInputElement>('[data-name]');
+      nameInput?.addEventListener('input', () => {
+          const displayName = header.querySelector<HTMLElement>('.model-name-display');
+          if (displayName) {
+              displayName.textContent = nameInput.value || 'New Model';
+          }
+      });
+
+      details.querySelector('.button-remove')?.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const currentName = nameInput?.value || 'this model';
+          if(confirm(`Are you sure you want to remove model "${currentName}"?`)){
               container.remove();
               if (openAIModelsListDiv.childElementCount === 0) {
                    openAIModelsListDiv.innerHTML = '<p class="no-models-message">No OpenAI compatible models configured.</p>';
@@ -152,8 +196,15 @@ function main() {
   addOpenAiModelButton.addEventListener('click', () => {
       const noModelsMessage = openAIModelsListDiv.querySelector('.no-models-message');
       if (noModelsMessage) noModelsMessage.remove();
-      const newForm = createOpenAIModelForm();
-      openAIModelsListDiv.appendChild(newForm);
+      
+      openAIModelsListDiv.querySelectorAll('.openai-model-item.expanded').forEach(item => {
+          item.classList.remove('expanded');
+      });
+
+      const newItem = createOpenAIModelListItem();
+      openAIModelsListDiv.appendChild(newItem);
+      newItem.classList.add('expanded');
+      newItem.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   });
 
 
@@ -164,6 +215,24 @@ function main() {
       if (event.target === settingsPanel) {
           closeSettings();
       }
+  });
+
+  // --- Settings Accordion Logic ---
+  const accordionHeaders = document.querySelectorAll('.settings-accordion-header');
+  accordionHeaders.forEach(header => {
+    header.addEventListener('click', () => {
+      const parentItem = header.closest('.settings-accordion-item');
+      if (!parentItem || parentItem.classList.contains('expanded')) {
+        return;
+      }
+      const settingsContainer = parentItem.closest('.settings-accordion');
+      const currentlyExpanded = settingsContainer?.querySelector('.settings-accordion-item.expanded');
+      
+      if (currentlyExpanded) {
+        currentlyExpanded.classList.remove('expanded');
+      }
+      parentItem.classList.add('expanded');
+    });
   });
 
   // --- Model Selector Logic ---
@@ -221,8 +290,18 @@ function main() {
     if (!file || !file.name.toLowerCase().endsWith('.txt')) { alert('Error: Please select a valid .txt file.'); return; }
     const reader = new FileReader();
     reader.onload = (e) => {
-      const result = e.target?.result as string;
-      if (typeof result === 'string') {
+      const buffer = e.target?.result as ArrayBuffer;
+      if (buffer) {
+        const encoding = encodingSelector.value;
+        let result = '';
+        try {
+            result = new TextDecoder(encoding).decode(buffer);
+        } catch (error) {
+            console.error('File decoding error:', error);
+            alert(`Failed to decode the file with ${encoding} encoding. The file might be corrupt or the wrong encoding was selected.`);
+            return;
+        }
+        
         chapters = splitIntoChapters(result);
         if (chapters.length > 0) {
           renderTableOfContents(); displayChapter(0);
@@ -230,46 +309,113 @@ function main() {
           contentWrapper.classList.remove('hidden');
           closeFileButton.classList.remove('hidden');
         } else { alert('Could not find any content to process in the file.'); }
-      } else { alert('Error: Could not read file content as text.'); }
+      } else { alert('Error: Could not read file content.'); }
     };
     reader.onerror = () => alert('Error: An error occurred while reading the file.');
-    reader.readAsText(file);
+    reader.readAsArrayBuffer(file);
   });
 
   function splitIntoChapters(text: string): { title: string; content: string }[] {
       if (!text || !text.trim()) return [];
-      const chapterHeadingRegex = /^(?:(chapter|part|book)\s+([0-9IVXLCDM]+|one|two|three|four|five|six|seven|eight|nine|ten)\.?|第\s*([0-9一二三四五六七八九十百千万零]+)\s*[章节篇]|卷\s*([0-9一二三四五六七八九十百千万零]+))\s*$/im;
+  
+      const MAX_CHUNK_SIZE = 2000;
+      const chapterHeadingRegex = /^(?:(chapter|part|book)\s+([0-9IVXLCDM]+|one|two|three|four|five|six|seven|eight|nine|ten)\.?|第\s*([0-9一二三四五六七八九十百千万零]+)\s*[章节篇回]|卷\s*([0-9一二三四五六七八九十百千万零]+))/im;
+  
       const lines = text.split('\n');
-      const foundChapters: { title: string; content: string }[] = [];
+      const initialChapters: { title: string; content: string }[] = [];
       let currentChapterContent: string[] = [];
-      let currentChapterTitle = "Prologue";
+      let currentChapterTitle = "Prologue"; // Default for content before the first heading
       let headingsFound = false;
+  
+      // 1. Primary Split by Headings
       for (const line of lines) {
           if (chapterHeadingRegex.test(line.trim())) {
               headingsFound = true;
-              if (currentChapterContent.length > 0) foundChapters.push({ title: currentChapterTitle, content: currentChapterContent.join('\n').trim() });
+              if (currentChapterContent.join('').trim()) {
+                  initialChapters.push({
+                      title: currentChapterTitle,
+                      content: currentChapterContent.join('\n').trim()
+                  });
+              }
               currentChapterTitle = line.trim();
               currentChapterContent = [];
-          } else { currentChapterContent.push(line); }
-      }
-      foundChapters.push({ title: currentChapterTitle, content: currentChapterContent.join('\n').trim() });
-      if (!headingsFound) {
-          const textToChunk = foundChapters[0].content;
-          const chunkedChapters: { title: string; content: string }[] = [];
-          const MAX_CHUNK_SIZE = 2000; let currentChunk = '';
-          const chunkLines = textToChunk.split('\n');
-          for (const line of chunkLines) {
-              if (currentChunk.length + line.length > MAX_CHUNK_SIZE) {
-                  if (currentChunk.trim()) chunkedChapters.push({ title: `Part ${chunkedChapters.length + 1}`, content: currentChunk.trim() });
-                  currentChunk = '';
-              }
-              currentChunk += line + '\n';
+          } else {
+              currentChapterContent.push(line);
           }
-          if (currentChunk.trim()) chunkedChapters.push({ title: `Part ${chunkedChapters.length + 1}`, content: currentChunk.trim() });
-          return chunkedChapters;
       }
-      if (foundChapters.length > 1 && foundChapters[0].title === 'Prologue' && !foundChapters[0].content.trim()) foundChapters.shift();
-      return foundChapters;
+      // Add the last chapter
+      if (currentChapterContent.join('').trim()) {
+          initialChapters.push({
+              title: currentChapterTitle,
+              content: currentChapterContent.join('\n').trim()
+          });
+      }
+  
+      // If no headings were found, the whole text is one initial chapter.
+      if (!headingsFound && initialChapters.length > 0) {
+          initialChapters[0].title = "Full Text";
+      }
+  
+      // Clean up potential empty "Prologue" if headings were found
+      if (headingsFound && initialChapters.length > 0 && initialChapters[0].title === 'Prologue' && !initialChapters[0].content.trim()) {
+          initialChapters.shift();
+      }
+      
+      if (initialChapters.length === 0) return [];
+  
+      // 2. Secondary Split (Sub-chunking)
+      const finalChapters: { title: string; content: string }[] = [];
+      for (const chapter of initialChapters) {
+          if (chapter.content.length <= MAX_CHUNK_SIZE) {
+              // Chapter is small enough, add it directly.
+              finalChapters.push({
+                  title: chapter.title,
+                  content: `${chapter.title}\n\n${chapter.content}`
+              });
+          } else {
+              // Chapter is too long, need to sub-chunk it.
+              let remainingContent = chapter.content;
+              let part = 1;
+              while (remainingContent.length > 0) {
+                  let newTitle: string;
+                  let newContent: string;
+                  let chunk: string;
+  
+                  if (remainingContent.length <= MAX_CHUNK_SIZE) {
+                      chunk = remainingContent;
+                      remainingContent = '';
+                  } else {
+                      // Find a good split point (a newline) backwards from the max size.
+                      let splitIndex = remainingContent.lastIndexOf('\n', MAX_CHUNK_SIZE);
+                      // If no newline is found or it's at the very beginning, force a split.
+                      if (splitIndex <= 0) {
+                          splitIndex = MAX_CHUNK_SIZE;
+                      }
+                      chunk = remainingContent.substring(0, splitIndex);
+                      remainingContent = remainingContent.substring(splitIndex).trim();
+                  }
+                  
+                  if (chunk.trim()) {
+                      if (part === 1) {
+                          // First part of a long chapter
+                          newTitle = chapter.title;
+                          newContent = `${chapter.title}\n\n${chunk.trim()}`;
+                      } else {
+                          // Subsequent parts of a long chapter
+                          newTitle = `${chapter.title} (Part ${part})`;
+                          newContent = chunk.trim();
+                      }
+                     finalChapters.push({
+                         title: newTitle,
+                         content: newContent
+                     });
+                  }
+                  part++;
+              }
+          }
+      }
+  
+      return finalChapters;
   }
 
   function renderTableOfContents() {
@@ -309,8 +455,12 @@ function main() {
   closeFileButton.addEventListener('click', resetState);
 
   // --- AI Transformation Logic ---
-  async function transformWithGemini(prompt: string, modelName: string): Promise<string> {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  async function transformWithGemini(prompt: string, modelName: string, apiKey: string): Promise<string> {
+      const keyToUse = apiKey || process.env.API_KEY;
+      if (!keyToUse) {
+        throw new Error('Gemini API key is not configured. Please add it in the settings.');
+      }
+      const ai = new GoogleGenAI({ apiKey: keyToUse });
       const response = await ai.models.generateContent({ model: modelName, contents: prompt });
       return response.text;
   }
@@ -351,8 +501,9 @@ function main() {
     try {
       if (selectedModel === 'google') {
           const modelName = localStorage.getItem('geminiModel');
+          const apiKey = localStorage.getItem('geminiApiKey') || '';
           if (!modelName) throw new Error("Gemini model name is not set.");
-          transformedText = await transformWithGemini(prompt, modelName);
+          transformedText = await transformWithGemini(prompt, modelName, apiKey);
       } else if (selectedModel.startsWith('openai-')) {
           const modelId = selectedModel.replace('openai-', '');
           const modelConfig = openAIModels.find(m => m.id === modelId);
