@@ -44,6 +44,8 @@ function main() {
   // App State
   let chapters: { title: string; content: string }[] = [];
   let currentChapterIndex = -1;
+  let fullFileContent = ''; // For session persistence
+  let currentFileName = ''; // For session persistence
   interface OpenAIModelConfig {
     id: string;
     name: string;
@@ -52,6 +54,71 @@ function main() {
     apiKey: string;
   }
   let openAIModels: OpenAIModelConfig[] = [];
+
+
+  // --- Session Persistence Logic ---
+  function saveSessionState() {
+    if (!fullFileContent || currentChapterIndex < 0) return;
+    try {
+      localStorage.setItem('session_fullFileContent', fullFileContent);
+      localStorage.setItem('session_fileName', currentFileName);
+      localStorage.setItem('session_encoding', encodingSelector.value);
+      localStorage.setItem('session_currentChapterIndex', String(currentChapterIndex));
+      localStorage.setItem('session_transformedContent', transformedContent.textContent || '');
+      const activeTab = originalTabButton.classList.contains('active') ? 'original' : 'transformed';
+      localStorage.setItem('session_activeTab', activeTab);
+    } catch (e) {
+      console.error("Failed to save session state:", e);
+    }
+  }
+
+  function loadSessionState(): boolean {
+    const savedContent = localStorage.getItem('session_fullFileContent');
+    if (!savedContent) return false;
+
+    try {
+        fullFileContent = savedContent;
+        currentFileName = localStorage.getItem('session_fileName') || '';
+        const savedEncoding = localStorage.getItem('session_encoding') || 'utf-8';
+        const savedIndex = parseInt(localStorage.getItem('session_currentChapterIndex') || '0', 10);
+        const savedTransformedContent = localStorage.getItem('session_transformedContent') || '';
+        const savedActiveTab = (localStorage.getItem('session_activeTab') || 'original') as 'original' | 'transformed';
+
+        encodingSelector.value = savedEncoding;
+        
+        chapters = splitIntoChapters(fullFileContent);
+        if (chapters.length > 0) {
+            renderTableOfContents();
+            displayChapter(savedIndex, false); // false to not reset transformed content
+
+            if(savedTransformedContent) {
+                transformedContent.textContent = savedTransformedContent;
+                transformedTabButton.disabled = false;
+            }
+
+            switchTab(savedActiveTab);
+            
+            introSection.classList.add('hidden');
+            contentWrapper.classList.remove('hidden');
+            closeFileButton.classList.remove('hidden');
+            return true;
+        }
+        return false;
+    } catch (e) {
+        console.error("Failed to load session state:", e);
+        clearSessionState();
+        return false;
+    }
+  }
+
+  function clearSessionState() {
+      localStorage.removeItem('session_fullFileContent');
+      localStorage.removeItem('session_fileName');
+      localStorage.removeItem('session_encoding');
+      localStorage.removeItem('session_currentChapterIndex');
+      localStorage.removeItem('session_transformedContent');
+      localStorage.removeItem('session_activeTab');
+  }
 
 
   // --- Settings Panel Logic ---
@@ -278,6 +345,7 @@ function main() {
     transformedTabButton.classList.toggle('active', !isOriginal);
     originalTabPanel.classList.toggle('active', isOriginal);
     transformedTabPanel.classList.toggle('active', !isOriginal);
+    saveSessionState();
   }
   originalTabButton.addEventListener('click', () => switchTab('original'));
   transformedTabButton.addEventListener('click', () => switchTab('transformed'));
@@ -288,26 +356,30 @@ function main() {
     const file = (event.target as HTMLInputElement).files?.[0];
     resetState();
     if (!file || !file.name.toLowerCase().endsWith('.txt')) { alert('Error: Please select a valid .txt file.'); return; }
+    
+    currentFileName = file.name;
     const reader = new FileReader();
+
     reader.onload = (e) => {
       const buffer = e.target?.result as ArrayBuffer;
       if (buffer) {
         const encoding = encodingSelector.value;
-        let result = '';
         try {
-            result = new TextDecoder(encoding).decode(buffer);
+            fullFileContent = new TextDecoder(encoding).decode(buffer);
         } catch (error) {
             console.error('File decoding error:', error);
             alert(`Failed to decode the file with ${encoding} encoding. The file might be corrupt or the wrong encoding was selected.`);
             return;
         }
         
-        chapters = splitIntoChapters(result);
+        chapters = splitIntoChapters(fullFileContent);
         if (chapters.length > 0) {
-          renderTableOfContents(); displayChapter(0);
+          renderTableOfContents(); 
+          displayChapter(0);
           introSection.classList.add('hidden'); 
           contentWrapper.classList.remove('hidden');
           closeFileButton.classList.remove('hidden');
+          saveSessionState();
         } else { alert('Could not find any content to process in the file.'); }
       } else { alert('Error: Could not read file content.'); }
     };
@@ -319,7 +391,7 @@ function main() {
       if (!text || !text.trim()) return [];
   
       const MAX_CHUNK_SIZE = 2000;
-      const chapterHeadingRegex = /^(?:(chapter|part|book)\s+([0-9IVXLCDM]+|one|two|three|four|five|six|seven|eight|nine|ten)\.?|第\s*([0-9一二三四五六七八九十百千万零]+)\s*[章节篇回]|卷\s*([0-9一二三四五六七八九十百千万零]+))/im;
+      const chapterHeadingRegex = /^(?:(chapter|part|book)\s+([0-9IVXLCDM]+|one|two|three|four|five|six|seven|eight|nine|ten)\.?|第\s*([0-9一二三四五六七八九十百千万零]+)\s*[章篇回]|卷\s*([0-9一二三四五六七八九十百千万零]+))/im;
   
       const lines = text.split('\n');
       const initialChapters: { title: string; content: string }[] = [];
@@ -428,18 +500,27 @@ function main() {
       });
   }
 
-  function displayChapter(index: number) {
+  function displayChapter(index: number, isNewSelection = true) {
       if (index < 0 || index >= chapters.length) return;
       currentChapterIndex = index;
       fileContent.textContent = chapters[index].content;
-      transformButton.disabled = false; transformedContent.textContent = ''; transformedTabButton.disabled = true;
-      switchTab('original');
+      transformButton.disabled = false;
+      
+      if (isNewSelection) {
+        transformedContent.textContent = '';
+        transformedTabButton.disabled = true;
+        switchTab('original');
+      }
+
       document.querySelectorAll('#tocList button').forEach((btn, i) => btn.classList.toggle('active', i === index));
-      fileContent.scrollTop = 0; closeTocPanel();
+      fileContent.scrollTop = 0;
+      closeTocPanel();
+      saveSessionState();
   }
 
   function resetState() {
     chapters = []; currentChapterIndex = -1;
+    fullFileContent = ''; currentFileName = '';
     contentWrapper.classList.add('hidden'); 
     introSection.classList.remove('hidden');
     tocList.innerHTML = ''; 
@@ -450,6 +531,7 @@ function main() {
     transformedTabButton.disabled = true;
     closeFileButton.classList.add('hidden');
     fileInput.value = ''; // Clear the file input
+    clearSessionState();
   }
 
   closeFileButton.addEventListener('click', resetState);
@@ -515,6 +597,7 @@ function main() {
 
       if (transformedText && transformedText.trim().length > 0) {
         transformedContent.textContent = transformedText;
+        saveSessionState();
       } else {
         transformedContent.textContent = 'The AI did not return any content. This might be due to content safety filters or an issue with the prompt.';
       }
@@ -528,6 +611,9 @@ function main() {
 
   // --- Initial Load ---
   loadSettings();
+  if (!loadSessionState()) {
+      // No session found, normal startup
+  }
 }
 
 // Ensures the script runs only after the DOM is fully loaded, preventing race conditions.
