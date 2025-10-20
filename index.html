@@ -7,7 +7,8 @@
     <script type="importmap">
       {
         "imports": {
-          "@google/genai": "https://esm.run/@google/genai"
+          "@google/genai": "https://esm.run/@google/genai",
+          "jschardet": "https://esm.run/jschardet"
         }
       }
     </script>
@@ -30,7 +31,8 @@
           <div class="form-group">
             <label for="encodingSelector">File Encoding</label>
             <select id="encodingSelector">
-              <option value="utf-8" selected>UTF-8</option>
+              <option value="auto" selected>Auto-detect</option>
+              <option value="utf-8">UTF-8</option>
               <option value="utf-16le">UTF-16 LE</option>
               <option value="utf-16be">UTF-16 BE</option>
               <option value="gb18030">GB18030 (Simplified Chinese)</option>

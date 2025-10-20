@@ -3,6 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
 */
 import { GoogleGenAI } from "@google/genai";
+import jschardet from 'jschardet';
 
 function main() {
   // DOM Elements
@@ -363,7 +364,49 @@ function main() {
     reader.onload = (e) => {
       const buffer = e.target?.result as ArrayBuffer;
       if (buffer) {
-        const encoding = encodingSelector.value;
+        let encoding = encodingSelector.value;
+        
+        if (encoding === 'auto') {
+            try {
+                // The jschardet library build from esm.run has issues with Uint8Array.
+                // Converting the buffer to a binary string is a reliable workaround.
+                const uint8array = new Uint8Array(buffer);
+                let binaryString = '';
+                for (let i = 0; i < uint8array.length; i++) {
+                    binaryString += String.fromCharCode(uint8array[i]);
+                }
+                const result = jschardet.detect(binaryString);
+                
+                // Use a high confidence threshold to avoid incorrect guesses
+                if (result && result.encoding && result.confidence > 0.9) {
+                    let detectedEncoding = result.encoding.toLowerCase();
+                    
+                    const encodingMap: { [key: string]: string } = {
+                        'gb2312': 'gb18030',
+                        'shift_jis': 'shift-jis'
+                    };
+                    detectedEncoding = encodingMap[detectedEncoding] || detectedEncoding;
+                    
+                    const isSupported = Array.from(encodingSelector.options).some(opt => opt.value === detectedEncoding);
+                    
+                    if (isSupported) {
+                        encoding = detectedEncoding;
+                        encodingSelector.value = encoding; // Update UI to show what was detected
+                    } else {
+                        console.warn(`Detected encoding "${detectedEncoding}" which is not in the supported list. Falling back to UTF-8.`);
+                        encoding = 'utf-8';
+                    }
+                } else {
+                    console.log('Encoding detection confidence low or failed. Falling back to UTF-8.');
+                    encoding = 'utf-8';
+                }
+            } catch (err) {
+                console.error("Error during character encoding detection:", err);
+                alert("Auto-detection of file encoding failed. Falling back to UTF-8.");
+                encoding = 'utf-8';
+            }
+        }
+        
         try {
             fullFileContent = new TextDecoder(encoding).decode(buffer);
         } catch (error) {
@@ -531,6 +574,7 @@ function main() {
     transformedTabButton.disabled = true;
     closeFileButton.classList.add('hidden');
     fileInput.value = ''; // Clear the file input
+    encodingSelector.value = 'auto';
     clearSessionState();
   }
 
