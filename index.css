@@ -34,6 +34,7 @@ main {
   padding: 2rem 2.5rem;
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+  position: relative; /* Add positioning context for FAB */
 }
 
 header {
@@ -497,7 +498,7 @@ h2 {
 
 /* Floating Action Button (FAB) Styles */
 #floating-actions-container {
-    position: fixed;
+    position: absolute; /* Changed from fixed to be relative to main */
     bottom: 2rem;
     right: 2rem;
     z-index: 100;
