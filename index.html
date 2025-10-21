@@ -18,6 +18,9 @@
     <main>
       <header>
         <h1>AI Content Transformer</h1>
+        <div id="model-selector-group" class="hidden">
+          <select id="modelSelector"></select>
+        </div>
         <div class="header-actions">
           <button type="button" id="closeFileButton" class="icon-button hidden" aria-label="Close File">&times;</button>
           <button type="button" id="toc-toggle-button" class="icon-button" aria-label="Open Table of Contents">☰</button>
@@ -58,14 +61,6 @@
         </section>
 
         <section id="chapter-content-section">
-          <div class="chapter-actions">
-             <div class="form-group">
-                <label for="modelSelector">Active Model</label>
-                <select id="modelSelector"></select>
-             </div>
-             <button type="button" id="transformButton" class="file-button" disabled>Transform This Chapter</button>
-             <button type="button" id="nextChapterButton" class="button-secondary" disabled>Next Chapter &rarr;</button>
-          </div>
           <div class="tabs">
             <div class="tab-buttons">
               <button type="button" class="tab-button active" id="originalTabButton">Original Chapter</button>
@@ -84,6 +79,15 @@
       </div>
 
     </main>
+
+    <div id="floating-actions-container" class="hidden">
+      <div id="floating-action-menu">
+        <button type="button" id="nextChapterButton" class="fab-menu-item" disabled aria-label="Next Chapter">&rarr;</button>
+        <button type="button" id="transformButton" class="fab-menu-item" disabled aria-label="Transform">✨</button>
+        <button type="button" id="prevChapterButton" class="fab-menu-item" disabled aria-label="Previous Chapter">&larr;</button>
+      </div>
+      <button type="button" id="floating-action-button" class="fab" aria-label="Actions">🪄</button>
+    </div>
 
     <div id="settingsPanel" class="modal-overlay" style="display: none;">
       <div class="modal-content">

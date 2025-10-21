@@ -13,6 +13,7 @@ function main() {
   const introSection = document.getElementById('intro-section') as HTMLElement;
   const contentWrapper = document.getElementById('content-wrapper') as HTMLElement;
   const modelSelector = document.getElementById('modelSelector') as HTMLSelectElement;
+  const modelSelectorGroup = document.getElementById('model-selector-group') as HTMLElement;
   const closeFileButton = document.getElementById('closeFileButton') as HTMLButtonElement;
 
   // Settings Panel Elements
@@ -41,7 +42,12 @@ function main() {
   const transformedTabButton = document.getElementById('transformedTabButton') as HTMLButtonElement;
   const originalTabPanel = document.getElementById('originalTabPanel') as HTMLElement;
   const transformedTabPanel = document.getElementById('transformedTabPanel') as HTMLElement;
+  const prevChapterButton = document.getElementById('prevChapterButton') as HTMLButtonElement;
   const nextChapterButton = document.getElementById('nextChapterButton') as HTMLButtonElement;
+
+  // FAB Elements
+  const fabContainer = document.getElementById('floating-actions-container') as HTMLElement;
+  const fabButton = document.getElementById('floating-action-button') as HTMLButtonElement;
 
   // App State
   let chapters: { title: string; content: string }[] = [];
@@ -103,6 +109,7 @@ function main() {
             introSection.classList.add('hidden');
             contentWrapper.classList.remove('hidden');
             closeFileButton.classList.remove('hidden');
+            modelSelectorGroup.classList.remove('hidden');
             return true;
         }
         return false;
@@ -353,6 +360,22 @@ function main() {
   transformedTabButton.addEventListener('click', () => switchTab('transformed'));
 
 
+  // --- Floating Action Button (FAB) Logic ---
+  if (fabButton && fabContainer) {
+      fabButton.addEventListener('click', (e) => {
+          e.stopPropagation(); // Prevent click from bubbling to the document
+          fabContainer.classList.toggle('active');
+      });
+
+      document.addEventListener('click', () => {
+          // If the menu is active, close it on any click outside
+          if (fabContainer.classList.contains('active')) {
+              fabContainer.classList.remove('active');
+          }
+      });
+  }
+
+
   // --- File Handling and Chapter Logic ---
   fileInput.addEventListener('change', (event) => {
     const file = (event.target as HTMLInputElement).files?.[0];
@@ -423,6 +446,7 @@ function main() {
           introSection.classList.add('hidden'); 
           contentWrapper.classList.remove('hidden');
           closeFileButton.classList.remove('hidden');
+          modelSelectorGroup.classList.remove('hidden');
           saveSessionState();
         } else { alert('Could not find any content to process in the file.'); }
       } else { alert('Error: Could not read file content.'); }
@@ -549,6 +573,7 @@ function main() {
       currentChapterIndex = index;
       fileContent.textContent = chapters[index].content;
       transformButton.disabled = false;
+      prevChapterButton.disabled = index <= 0;
       nextChapterButton.disabled = index >= chapters.length - 1;
       
       if (isNewSelection) {
@@ -560,6 +585,7 @@ function main() {
       document.querySelectorAll('#tocList button').forEach((btn, i) => btn.classList.toggle('active', i === index));
       fileContent.scrollTop = 0;
       closeTocPanel();
+      if (fabContainer) fabContainer.classList.remove('hidden');
       saveSessionState();
   }
 
@@ -572,16 +598,25 @@ function main() {
     fileContent.textContent = ''; 
     transformedContent.textContent = '';
     transformButton.disabled = true; 
+    prevChapterButton.disabled = true;
     nextChapterButton.disabled = true;
     switchTab('original'); 
     transformedTabButton.disabled = true;
     closeFileButton.classList.add('hidden');
+    modelSelectorGroup.classList.add('hidden');
+    if (fabContainer) fabContainer.classList.add('hidden');
     fileInput.value = ''; // Clear the file input
     encodingSelector.value = 'auto';
     clearSessionState();
   }
 
   closeFileButton.addEventListener('click', resetState);
+
+  prevChapterButton.addEventListener('click', () => {
+      if (currentChapterIndex > 0) {
+          displayChapter(currentChapterIndex - 1);
+      }
+  });
 
   nextChapterButton.addEventListener('click', () => {
       if (currentChapterIndex >= 0 && currentChapterIndex < chapters.length - 1) {

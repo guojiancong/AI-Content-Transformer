@@ -40,13 +40,30 @@ header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.5rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
 .header-actions {
   display: flex;
   gap: 0.5rem;
   align-items: center;
+}
+
+#model-selector-group {
+    margin-left: auto; /* Pushes to the right on desktop */
+    max-width: 300px;
+    width: 100%;
+}
+#model-selector-group select {
+    padding: 6px 10px;
+    border-radius: 4px;
+    border: 1px solid var(--border-color);
+    background-color: var(--surface-color);
+    font-size: 0.9rem;
+    font-family: var(--font-family);
+    width: 100%;
 }
 
 #toc-toggle-button {
@@ -70,6 +87,7 @@ h1 {
   margin: 0;
   font-size: 1.8rem;
   text-align: left;
+  flex-shrink: 0;
 }
 
 h2 {
@@ -182,23 +200,6 @@ h2 {
 #chapter-content-section {
     display: flex;
     flex-direction: column;
-}
-
-.chapter-actions {
-    margin-bottom: 1rem;
-    display: flex;
-    gap: 1rem;
-    align-items: flex-end;
-}
-
-.chapter-actions .file-button,
-.chapter-actions .button-secondary {
-    padding: 10px 16px; /* Make buttons smaller */
-}
-
-.chapter-actions .form-group {
-    flex-grow: 1;
-    margin-bottom: 0;
 }
 
 /* Tab Styles */
@@ -494,6 +495,92 @@ h2 {
     padding: 1.5rem 1rem 1rem 1rem;
 }
 
+/* Floating Action Button (FAB) Styles */
+#floating-actions-container {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 100;
+    display: flex;
+    flex-direction: column-reverse; /* Menu items on top */
+    align-items: center;
+    gap: 1rem;
+    opacity: 0.7;
+    transition: opacity 0.3s ease-in-out;
+}
+#floating-actions-container:hover,
+#floating-actions-container.active {
+    opacity: 1;
+}
+#floating-action-button,
+.fab-menu-item {
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    transition: all 0.2s ease-in-out;
+    background-color: var(--primary-color);
+    color: white;
+}
+#floating-action-button {
+    width: 56px;
+    height: 56px;
+    font-size: 1.8rem;
+}
+#floating-action-button:hover {
+    background-color: var(--primary-hover-color);
+    transform: scale(1.05);
+}
+
+#floating-action-menu {
+    display: flex;
+    flex-direction: column-reverse; /* Matches visual order to keyboard tab order */
+    align-items: center;
+    gap: 1rem;
+    visibility: hidden;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.2s ease-out;
+}
+
+#floating-actions-container.active #floating-action-menu {
+    visibility: visible;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.fab-menu-item {
+    width: 48px;
+    height: 48px;
+    font-size: 1.5rem;
+}
+.fab-menu-item:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    box-shadow: none;
+    opacity: 0.7;
+}
+
+#transformButton.fab-menu-item {
+    background-color: #34a853; /* A different color for the main action */
+}
+#transformButton.fab-menu-item:not(:disabled):hover {
+    background-color: #1e8e3e;
+}
+
+#prevChapterButton.fab-menu-item,
+#nextChapterButton.fab-menu-item {
+    background-color: var(--secondary-color);
+    color: var(--text-color);
+}
+#prevChapterButton.fab-menu-item:not(:disabled):hover,
+#nextChapterButton.fab-menu-item:not(:disabled):hover {
+    background-color: var(--secondary-hover-color);
+}
+
 
 /* Dark Mode */
 @media (prefers-color-scheme: dark) {
@@ -532,6 +619,10 @@ h2 {
   .openai-model-header:hover {
       background-color: #3c4043;
   }
+  #floating-action-button,
+  #transformButton.fab-menu-item {
+      color: #202124;
+  }
 }
 
 /* Mobile Responsive */
@@ -547,10 +638,21 @@ h2 {
     display: flex;
     flex-direction: column;
     border-radius: 0;
+    margin-bottom: 0;
+  }
+  header {
+    gap: 0.75rem;
   }
   h1 {
     font-size: 1.3rem;
   }
+  #model-selector-group {
+    order: 3;
+    flex-basis: 100%;
+    margin-left: 0;
+    max-width: none;
+  }
+  
   #content-wrapper {
     grid-template-columns: 1fr;
     flex-grow: 1;
@@ -564,24 +666,12 @@ h2 {
       flex-direction: column;
       min-height: 0; /* Prevents flexbox overflow */
   }
-  .chapter-actions {
-      flex-direction: row;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 0.5rem;
+
+  #floating-actions-container {
+      bottom: 1.5rem;
+      right: 1rem;
   }
-  .chapter-actions .form-group {
-      flex: 1 1 120px; /* Grow, shrink, with a base size */
-  }
-  .chapter-actions .form-group label {
-      display: none; /* Hide label to save space */
-  }
-  .chapter-actions .file-button,
-  .chapter-actions .button-secondary {
-    flex: 0 1 auto; /* Don't grow, allow shrinking, auto width */
-    padding: 8px 12px;
-    font-size: 0.9rem;
-  }
+
   .tab-button {
     padding: 8px 10px;
     font-size: 0.9rem;
