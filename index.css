@@ -642,14 +642,31 @@ h2 {
     margin-bottom: 0;
   }
   header {
+    display: grid;
+    grid-template-columns: 1fr auto; /* Title takes available space, actions fit their content */
+    grid-template-rows: auto auto;    /* Row 1 for title/actions, Row 2 for model selector */
+    align-items: center;
     gap: 0.75rem;
+    margin-bottom: 1.5rem;
   }
   h1 {
+    grid-row: 1 / 2;
+    grid-column: 1 / 2;
     font-size: 1.3rem;
+    padding-right: 0; /* No longer needed with grid layout */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .header-actions {
+    grid-row: 1 / 2;
+    grid-column: 2 / 3;
+    position: static;
+    transform: none;
   }
   #model-selector-group {
-    order: 3;
-    flex-basis: 100%;
+    grid-row: 2 / 3;
+    grid-column: 1 / 3; /* Span both columns */
     margin-left: 0;
     max-width: none;
   }
