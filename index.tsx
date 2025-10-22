@@ -58,7 +58,7 @@ function main() {
     id: string;
     name: string;
     baseUrl: string;
-    modelName: string;
+    modelName: string; // Newline-separated list of model names
     apiKey: string;
   }
   let openAIModels: OpenAIModelConfig[] = [];
@@ -155,7 +155,7 @@ function main() {
           const id = (form.querySelector('[data-id]') as HTMLElement).dataset.id;
           const name = (form.querySelector('[data-name]') as HTMLInputElement).value;
           const baseUrl = (form.querySelector('[data-baseurl]') as HTMLInputElement).value;
-          const modelName = (form.querySelector('[data-modelname]') as HTMLInputElement).value;
+          const modelName = (form.querySelector('[data-modelnames]') as HTMLTextAreaElement).value;
           const apiKey = (form.querySelector('[data-apikey]') as HTMLInputElement).value;
           if (id && name && baseUrl && modelName) { // api key can be optional visually
               updatedOpenAIModels.push({ id, name, baseUrl, modelName, apiKey });
@@ -223,8 +223,8 @@ function main() {
                 <input type="url" data-baseurl value="${model?.baseUrl || ''}" placeholder="https://api.example.com/v1">
             </div>
             <div class="form-group">
-                <label>Model Name</label>
-                <input type="text" data-modelname value="${model?.modelName || ''}" placeholder="llama3-70b-8192">
+                <label>Model Names (one per line)</label>
+                <textarea data-modelnames placeholder="llama3-70b-8192&#10;gemma-7b-it">${model?.modelName || ''}</textarea>
             </div>
             <div class="form-group">
                 <label>API Key</label>
@@ -318,14 +318,31 @@ function main() {
       
       const geminiOption = document.createElement('option');
       geminiOption.value = 'google';
-      geminiOption.textContent = `Gemini: ${geminiModel}`;
+      geminiOption.textContent = `Gemini (${geminiModel})`;
       modelSelector.appendChild(geminiOption);
 
-      openAIModels.forEach(model => {
-          const option = document.createElement('option');
-          option.value = `openai-${model.id}`;
-          option.textContent = `OpenAI: ${model.name}`;
-          modelSelector.appendChild(option);
+      openAIModels.forEach(config => {
+          if (config.modelName) {
+                const modelNames = config.modelName.split('\n').map(name => name.trim()).filter(name => name);
+                
+                if (modelNames.length === 1) {
+                    const option = document.createElement('option');
+                    option.value = `openai-${config.id}::${modelNames[0]}`;
+                    option.textContent = `${config.name}`;
+                    modelSelector.appendChild(option);
+                } else if (modelNames.length > 1) {
+                    const optgroup = document.createElement('optgroup');
+                    optgroup.label = config.name;
+                    modelSelector.appendChild(optgroup);
+
+                    modelNames.forEach(modelName => {
+                        const option = document.createElement('option');
+                        option.value = `openai-${config.id}::${modelName}`;
+                        option.textContent = modelName;
+                        optgroup.appendChild(option);
+                    });
+                }
+            }
       });
 
       const lastSelectedModel = localStorage.getItem('lastSelectedModel');
@@ -675,10 +692,21 @@ function main() {
           if (!modelName) throw new Error("Gemini model name is not set.");
           transformedText = await transformWithGemini(prompt, modelName, apiKey);
       } else if (selectedModel.startsWith('openai-')) {
-          const modelId = selectedModel.replace('openai-', '');
-          const modelConfig = openAIModels.find(m => m.id === modelId);
-          if (!modelConfig) throw new Error(`Could not find configuration for selected OpenAI model.`);
-          transformedText = await transformWithOpenAI(prompt, modelConfig);
+          const parts = selectedModel.split('::');
+          if (parts.length !== 2) throw new Error(`Invalid OpenAI model selection format.`);
+          
+          const fullConfigId = parts[0];
+          const selectedModelName = parts[1];
+          
+          const configId = fullConfigId.replace('openai-', '');
+          const modelConfig = openAIModels.find(m => m.id === configId);
+
+          if (!modelConfig) throw new Error(`Could not find configuration for the selected OpenAI service.`);
+
+          // Create a specific config for this call with the chosen model name
+          const callConfig: OpenAIModelConfig = { ...modelConfig, modelName: selectedModelName };
+
+          transformedText = await transformWithOpenAI(prompt, callConfig);
       } else {
           throw new Error(`Unknown model selection: ${selectedModel}`);
       }

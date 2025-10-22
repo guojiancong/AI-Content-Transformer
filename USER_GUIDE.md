@@ -28,7 +28,15 @@ Before you can transform content, you must configure an AI model.
         *   **API Key**: Your Google AI API key. If you leave this blank, the application will try to use a pre-configured key from the environment.
     *   **OpenAI Compatible Models**:
         *   If you use a local model (like Llama) or another service with an OpenAI-compatible API, click **Add New Model**.
-        *   Fill in the details: a display name, the API Base URL, the specific model name, and the API Key.
+        *   Fill in the details:
+            *   **Display Name**: A name for this service (e.g., `My Local AI`).
+            *   **API Base URL**: The endpoint for the service.
+            *   **Model Names**: Enter the specific model IDs you want to use from this service, with **each model on a new line**. For example:
+                ```
+                llama3-70b-instruct
+                gemma-7b-it
+                ```
+            *   **API Key**: The API key for the service.
 3.  Click **Save & Close** when you are done.
 
 #### Step 2: Choose a File
@@ -61,7 +69,7 @@ Once the file is loaded:
 
 ### 3. Key Features
 
-*   **Model Selection**: Easily switch between your configured Gemini and OpenAI models using the dropdown menu in the header.
+*   **Model Selection**: Easily switch between your configured models using the dropdown menu in the header. If you've configured an OpenAI-compatible service with multiple model names, they will appear grouped under the service's display name in the dropdown for easy selection.
 *   **Session Persistence**: The app remembers your loaded file, current chapter, and transformed text. If you close and reopen the browser tab, you can continue where you left off.
 *   **Responsive Design**: The interface adapts smoothly for use on both desktop and mobile devices.
 
@@ -91,7 +99,15 @@ AI 内容转换器是一款强大的工具，旨在帮助您重写或重塑 `.tx
         *   **API Key (API 密钥)**：您的 Google AI API 密钥。如果留空，应用将尝试使用环境中预设的密钥。
     *   **OpenAI 兼容模型 (OpenAI Compatible Models)**：
         *   如果您使用本地模型（如 Llama）或其他提供 OpenAI 兼容 API 的服务，请点击 **Add New Model (添加新模型)**。
-        *   填写详细信息：一个用于显示的名称、API 的基础 URL、具体的模型名称以及 API 密钥。
+        *   填写详细信息:
+            *   **Display Name (显示名称)**: 为此服务命名 (例如: `我的本地AI`)。
+            *   **API Base URL (API基础URL)**: 服务的接口地址。
+            *   **Model Names (模型名称)**: 输入您想从该服务使用的具体模型ID，**每个模型占一行**。例如:
+                ```
+                llama3-70b-instruct
+                gemma-7b-it
+                ```
+            *   **API Key (API密钥)**: 服务的API密钥。
 3.  完成后，点击 **Save & Close (保存并关闭)**。
 
 #### 第二步：选择文件
@@ -124,6 +140,6 @@ AI 内容转换器是一款强大的工具，旨在帮助您重写或重塑 `.tx
 
 ### 3. 主要功能
 
-*   **模型选择 (Model Selection)**：使用标题栏中的下拉菜单，轻松在已配置的 Gemini 和 OpenAI 模型之间切换。
+*   **模型选择 (Model Selection)**：使用标题栏中的下拉菜单，轻松在已配置的模型之间切换。如果您为一个 OpenAI 兼容服务配置了多个模型名称，它们将在下拉菜单中以该服务的显示名称分组，方便您进行选择。
 *   **会话保持 (Session Persistence)**：应用会记住您加载的文件、当前章节和已转换的文本。即使您关闭并重新打开浏览器标签页，也能从上次离开的地方继续。
-*   **响应式设计 (Responsive Design)**：界面能够流畅地适应桌面和移动设备的使用。
+*   **响应式设计 (Responsive Design)**：界面能够流畅地适应桌面和移动设备的使用。增强模型输入，支持同一个服务商多个模型id的输入，同时在模型选择上也优化一下对应的显示
