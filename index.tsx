@@ -328,7 +328,7 @@ function main() {
                 if (modelNames.length === 1) {
                     const option = document.createElement('option');
                     option.value = `openai-${config.id}::${modelNames[0]}`;
-                    option.textContent = `${config.name}`;
+                    option.textContent = `${config.name} (${modelNames[0]})`;
                     modelSelector.appendChild(option);
                 } else if (modelNames.length > 1) {
                     const optgroup = document.createElement('optgroup');

@@ -32,7 +32,7 @@ Before you can transform content, you must configure an AI model.
             *   **Display Name**: A name for this service (e.g., `My Local AI`).
             *   **API Base URL**: The endpoint for the service.
             *   **Model Names**: Enter the specific model IDs you want to use from this service, with **each model on a new line**. For example:
-                ```
+                ```text
                 llama3-70b-instruct
                 gemma-7b-it
                 ```
@@ -103,7 +103,7 @@ AI 内容转换器是一款强大的工具，旨在帮助您重写或重塑 `.tx
             *   **Display Name (显示名称)**: 为此服务命名 (例如: `我的本地AI`)。
             *   **API Base URL (API基础URL)**: 服务的接口地址。
             *   **Model Names (模型名称)**: 输入您想从该服务使用的具体模型ID，**每个模型占一行**。例如:
-                ```
+                ```text
                 llama3-70b-instruct
                 gemma-7b-it
                 ```
@@ -142,4 +142,4 @@ AI 内容转换器是一款强大的工具，旨在帮助您重写或重塑 `.tx
 
 *   **模型选择 (Model Selection)**：使用标题栏中的下拉菜单，轻松在已配置的模型之间切换。如果您为一个 OpenAI 兼容服务配置了多个模型名称，它们将在下拉菜单中以该服务的显示名称分组，方便您进行选择。
 *   **会话保持 (Session Persistence)**：应用会记住您加载的文件、当前章节和已转换的文本。即使您关闭并重新打开浏览器标签页，也能从上次离开的地方继续。
-*   **响应式设计 (Responsive Design)**：界面能够流畅地适应桌面和移动设备的使用。增强模型输入，支持同一个服务商多个模型id的输入，同时在模型选择上也优化一下对应的显示
+*   **响应式设计 (Responsive Design)**：界面能够流畅地适应桌面和移动设备的使用。
