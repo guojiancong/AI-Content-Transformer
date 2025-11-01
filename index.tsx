@@ -62,6 +62,7 @@ function main() {
     apiKey: string;
   }
   let openAIModels: OpenAIModelConfig[] = [];
+  let currentTransformationController: AbortController | null = null;
 
 
   // --- Session Persistence Logic ---
@@ -642,87 +643,179 @@ function main() {
   });
 
   // --- AI Transformation Logic ---
-  async function transformWithGemini(prompt: string, modelName: string, apiKey: string): Promise<string> {
+  async function transformWithGeminiStream(prompt: string, modelName: string, apiKey: string, onChunk: (chunk: string) => void, signal: AbortSignal): Promise<void> {
       const keyToUse = apiKey || process.env.API_KEY;
       if (!keyToUse) {
-        throw new Error('Gemini API key is not configured. Please add it in the settings.');
+          throw new Error('Gemini API key is not configured. Please add it in the settings.');
       }
       const ai = new GoogleGenAI({ apiKey: keyToUse });
-      const response = await ai.models.generateContent({ model: modelName, contents: prompt });
-      return response.text;
+      const stream = await ai.models.generateContentStream({ model: modelName, contents: prompt });
+      for await (const chunk of stream) {
+          if (signal.aborted) {
+              throw new DOMException('Aborted by user', 'AbortError');
+          }
+          onChunk(chunk.text);
+      }
   }
 
-  async function transformWithOpenAI(prompt: string, config: OpenAIModelConfig): Promise<string> {
+  async function transformWithOpenAIStream(prompt: string, config: OpenAIModelConfig, onChunk: (chunk: string) => void, signal: AbortSignal): Promise<void> {
       const response = await fetch(`${config.baseUrl}/chat/completions`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${config.apiKey}` },
-          body: JSON.stringify({ model: config.modelName, messages: [{ role: 'user', content: prompt }] })
+          body: JSON.stringify({
+              model: config.modelName,
+              messages: [{ role: 'user', content: prompt }],
+              stream: true,
+          }),
+          signal: signal,
       });
+
       if (!response.ok) {
           const errorBody = await response.text();
           throw new Error(`OpenAI API Error: ${response.status} ${response.statusText} - ${errorBody}`);
       }
-      const data = await response.json();
-      return data.choices[0]?.message?.content || '';
+      if (!response.body) {
+          throw new Error("Response body is null");
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+          for (const line of lines) {
+              if (line.startsWith('data: ')) {
+                  const data = line.substring(6);
+                  if (data.trim() === '[DONE]') return;
+                  try {
+                      const parsed = JSON.parse(data);
+                      const delta = parsed.choices[0]?.delta?.content;
+                      if (delta) onChunk(delta);
+                  } catch (e) {
+                      console.error("Error parsing stream data:", e, "Data:", data);
+                  }
+              }
+          }
+      }
+  }
+
+  function showErrorState(message: string, onRetry: () => void) {
+      transformedContent.innerHTML = '';
+      const errorContainer = document.createElement('div');
+      errorContainer.className = 'error-container';
+      
+      const messageP = document.createElement('p');
+      messageP.textContent = message;
+      
+      const retryButton = document.createElement('button');
+      retryButton.textContent = 'Retry';
+      retryButton.className = 'button-secondary';
+      retryButton.onclick = onRetry;
+
+      errorContainer.appendChild(messageP);
+      errorContainer.appendChild(retryButton);
+      transformedContent.appendChild(errorContainer);
   }
 
   transformButton.addEventListener('click', async () => {
-    if (currentChapterIndex === -1) return;
-    const originalText = chapters[currentChapterIndex].content;
-    const writerStyle = localStorage.getItem('writerStyle');
-    const customPromptTemplate = localStorage.getItem('customPrompt');
-    const selectedModel = modelSelector.value;
-    if (!originalText) { alert('There is no content in this chapter to transform.'); return; }
-    if (!writerStyle) { alert('Please configure your writer style in settings first.'); openSettings(); return; }
-    if (!customPromptTemplate) { alert('Could not find the custom prompt in settings.'); openSettings(); return; }
-
-    transformedContent.textContent = 'Transforming with AI...';
-    transformButton.disabled = true; transformedTabButton.disabled = false; switchTab('transformed');
-
-    const prompt = customPromptTemplate
-      .replace('{writerStyle}', writerStyle)
-      .replace('{originalText}', originalText);
-      
-    let transformedText = '';
-
-    try {
-      if (selectedModel === 'google') {
-          const modelName = localStorage.getItem('geminiModel');
-          const apiKey = localStorage.getItem('geminiApiKey') || '';
-          if (!modelName) throw new Error("Gemini model name is not set.");
-          transformedText = await transformWithGemini(prompt, modelName, apiKey);
-      } else if (selectedModel.startsWith('openai-')) {
-          const parts = selectedModel.split('::');
-          if (parts.length !== 2) throw new Error(`Invalid OpenAI model selection format.`);
-          
-          const fullConfigId = parts[0];
-          const selectedModelName = parts[1];
-          
-          const configId = fullConfigId.replace('openai-', '');
-          const modelConfig = openAIModels.find(m => m.id === configId);
-
-          if (!modelConfig) throw new Error(`Could not find configuration for the selected OpenAI service.`);
-
-          // Create a specific config for this call with the chosen model name
-          const callConfig: OpenAIModelConfig = { ...modelConfig, modelName: selectedModelName };
-
-          transformedText = await transformWithOpenAI(prompt, callConfig);
-      } else {
-          throw new Error(`Unknown model selection: ${selectedModel}`);
+      // If a transformation is in progress, this button acts as a CANCEL button.
+      if (currentTransformationController) {
+          currentTransformationController.abort();
+          return;
       }
 
-      if (transformedText && transformedText.trim().length > 0) {
-        transformedContent.textContent = transformedText;
-        saveSessionState();
-      } else {
-        transformedContent.textContent = 'The AI did not return any content. This might be due to content safety filters or an issue with the prompt.';
+      if (currentChapterIndex === -1) return;
+      const originalText = chapters[currentChapterIndex].content;
+      const writerStyle = localStorage.getItem('writerStyle');
+      const customPromptTemplate = localStorage.getItem('customPrompt');
+      const selectedModel = modelSelector.value;
+      if (!originalText) { alert('There is no content in this chapter to transform.'); return; }
+      if (!writerStyle) { alert('Please configure your writer style in settings first.'); openSettings(); return; }
+      if (!customPromptTemplate) { alert('Could not find the custom prompt in settings.'); openSettings(); return; }
+
+      // --- Start new transformation ---
+      currentTransformationController = new AbortController();
+      const signal = currentTransformationController.signal;
+
+      // --- Update UI to "in-progress" state ---
+      transformButton.innerHTML = '⏹️';
+      transformButton.setAttribute('aria-label', 'Cancel Transformation');
+      transformButton.style.backgroundColor = 'var(--danger-color)';
+      prevChapterButton.disabled = true;
+      nextChapterButton.disabled = true;
+
+      transformedContent.innerHTML = ''; // Clear previous content
+      const loadingContainer = document.createElement('div');
+      loadingContainer.className = 'loading-indicator';
+      loadingContainer.innerHTML = `<span class="spinner"></span><p>AI is thinking...</p>`;
+      transformedContent.appendChild(loadingContainer);
+      transformedTabButton.disabled = false;
+      switchTab('transformed');
+
+      let fullResponse = '';
+      let firstChunkReceived = false;
+      const prompt = customPromptTemplate.replace('{writerStyle}', writerStyle).replace('{originalText}', originalText);
+
+      const onChunk = (chunk: string) => {
+          if (!firstChunkReceived) {
+              transformedContent.innerHTML = '';
+              firstChunkReceived = true;
+          }
+          fullResponse += chunk;
+          transformedContent.textContent = fullResponse;
+          transformedContent.scrollTop = transformedContent.scrollHeight; // Auto-scroll
+      };
+
+      try {
+          if (selectedModel === 'google') {
+              const modelName = localStorage.getItem('geminiModel');
+              const apiKey = localStorage.getItem('geminiApiKey') || '';
+              if (!modelName) throw new Error("Gemini model name is not set.");
+              await transformWithGeminiStream(prompt, modelName, apiKey, onChunk, signal);
+          } else if (selectedModel.startsWith('openai-')) {
+              const parts = selectedModel.split('::');
+              if (parts.length !== 2) throw new Error(`Invalid OpenAI model selection format.`);
+              
+              const configId = parts[0].replace('openai-', '');
+              const selectedModelName = parts[1];
+              const modelConfig = openAIModels.find(m => m.id === configId);
+              if (!modelConfig) throw new Error(`Could not find configuration for the selected OpenAI service.`);
+              const callConfig: OpenAIModelConfig = { ...modelConfig, modelName: selectedModelName };
+              await transformWithOpenAIStream(prompt, callConfig, onChunk, signal);
+          } else {
+              throw new Error(`Unknown model selection: ${selectedModel}`);
+          }
+      } catch (e: any) {
+          if (e.name === 'AbortError') {
+              transformedContent.textContent = 'Transformation cancelled by user.';
+          } else {
+              console.error('AI Transformation Error:', e);
+              const errorMessage = `An error occurred during transformation. Please check your settings and the console for details.\n\nError: ${e.message}`;
+              // Clicking the transform button again will trigger a retry
+              showErrorState(errorMessage, () => transformButton.click()); 
+          }
+      } finally {
+          // --- Reset UI to idle state ---
+          transformButton.innerHTML = '✨';
+          transformButton.setAttribute('aria-label', 'Transform');
+          transformButton.style.backgroundColor = ''; // Revert to default
+          transformButton.disabled = false;
+          prevChapterButton.disabled = currentChapterIndex <= 0;
+          nextChapterButton.disabled = currentChapterIndex >= chapters.length - 1;
+          currentTransformationController = null;
+
+          if (fullResponse.trim().length > 0) {
+              transformedContent.textContent = fullResponse;
+              saveSessionState();
+          } else if (!firstChunkReceived && !signal.aborted) {
+              // Handle case where it finishes with no output at all
+              transformedContent.textContent = 'The AI did not return any content. This might be due to content safety filters or an issue with the prompt.';
+          }
       }
-    } catch (e: any) {
-      console.error('AI Transformation Error:', e);
-      transformedContent.textContent = `An error occurred during transformation. Please check your settings and the console for more details.\n\nError: ${e.message}`;
-    } finally {
-      transformButton.disabled = false;
-    }
   });
 
   // --- Initial Load ---

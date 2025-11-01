@@ -591,6 +591,48 @@ h2 {
     background-color: var(--secondary-hover-color);
 }
 
+/* Loading and Error States */
+#transformedContent .loading-indicator,
+#transformedContent .error-container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    font-family: var(--font-family);
+    color: var(--text-color);
+}
+
+#transformedContent .error-container p {
+    margin: 0;
+    text-align: center;
+    white-space: normal; /* Allow error text to wrap */
+    max-width: 90%;
+}
+
+#transformedContent .error-container button {
+    margin-top: 0.5rem;
+}
+
+.spinner {
+    width: 48px;
+    height: 48px;
+    border: 5px solid var(--secondary-color);
+    border-bottom-color: var(--primary-color);
+    border-radius: 50%;
+    display: inline-block;
+    box-sizing: border-box;
+    animation: rotation 1s linear infinite;
+}
+
+@keyframes rotation {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
 
 /* Dark Mode */
 @media (prefers-color-scheme: dark) {
