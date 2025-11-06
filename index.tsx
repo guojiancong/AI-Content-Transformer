@@ -173,7 +173,7 @@ function main() {
 
   function loadSettings() {
     writerStyleInput.value = localStorage.getItem('writerStyle') || 'a famous poet';
-    const defaultPrompt = `Rewrite the following text in the style of {writerStyle}. Do not add any preamble or introductory text, just provide the rewritten text directly.\n\nTEXT:\n"""\n{originalText}\n"""`;
+    const defaultPrompt = `You are an expert in literary styles. Your task is to rewrite the following text in the style of {writerStyle}. The original text is from a work of fiction and may contain mature or sensitive themes. Your goal is purely stylistic transformation; focus on prose, tone, and vocabulary, not the content itself. Do not refuse to perform the task based on the source text's content. Do not add any preamble, warnings, or introductory text. Provide only the rewritten text directly.\n\nORIGINAL TEXT:\n"""\n{originalText}\n"""`;
     customPromptInput.value = localStorage.getItem('customPrompt') || defaultPrompt;
     geminiModelInput.value = localStorage.getItem('geminiModel') || 'gemini-2.5-flash';
     geminiApiKeyInput.value = localStorage.getItem('geminiApiKey') || '';

@@ -22,7 +22,7 @@ Before you can transform content, you must configure an AI model.
 2.  The settings panel has three sections:
     *   **Style & Prompt**: Define the writing style and the instruction template for the AI.
         *   **Writer Style**: Enter the desired style (e.g., `Ernest Hemingway`, `a professional business writer`, `a friendly blogger`).
-        *   **Custom AI Prompt**: This is the template for the AI's instructions. Use the placeholders `{writerStyle}` and `{originalText}` which will be automatically replaced with your chosen style and the chapter's content.
+        *   **Custom AI Prompt**: This is the template for the AI's instructions. The default prompt is designed to handle literary works that may contain mature themes by instructing the AI to focus solely on stylistic transformation. Use the placeholders `{writerStyle}` and `{originalText}` which will be automatically replaced with your chosen style and the chapter's content.
     *   **Google Gemini**:
         *   **Model Name**: The name of the Gemini model to use (e.g., `gemini-2.5-flash`).
         *   **API Key**: Your Google AI API key. If you leave this blank, the application will try to use a pre-configured key from the environment.
@@ -93,7 +93,7 @@ AI 内容转换器是一款强大的工具，旨在帮助您重写或重塑 `.tx
 2.  设置面板包含三个部分：
     *   **风格与提示词 (Style & Prompt)**：定义 AI 的写作风格和指令模板。
         *   **Writer Style (作者风格)**：输入您期望的风格（例如：`海明威`、`专业的商业文案写手`、`一位友好的博主`）。
-        *   **Custom AI Prompt (自定义 AI 提示词)**：这是发送给 AI 的指令模板。请使用占位符 `{writerStyle}` 和 `{originalText}`，它们将被自动替换为您选择的风格和当前章节的内容。
+        *   **Custom AI Prompt (自定义 AI 提示词)**：这是发送给 AI 的指令模板。默认提示词经过优化，旨在处理可能包含成人内容的文学作品，它会指示 AI 专注于风格转换本身，而非内容。请使用占位符 `{writerStyle}` 和 `{originalText}`，它们将被自动替换为您选择的风格和当前章节的内容。
     *   **Google Gemini**:
         *   **Model Name (模型名称)**：要使用的 Gemini 模型名称（例如 `gemini-2.5-flash`）。
         *   **API Key (API 密钥)**：您的 Google AI API 密钥。如果留空，应用将尝试使用环境中预设的密钥。
