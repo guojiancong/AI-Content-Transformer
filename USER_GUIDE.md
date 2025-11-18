@@ -1,5 +1,7 @@
 # AI Content Transformer User Guide
 
+**Live Demo:** [https://guojiancong.github.io/AI-Content-Transformer/](https://guojiancong.github.io/AI-Content-Transformer/)
+
 This guide will walk you through how to use the AI Content Transformer to load, navigate, and transform text files using the power of AI.
 
 ---
