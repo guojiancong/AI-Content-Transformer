@@ -1,3 +1,4 @@
+
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
@@ -175,7 +176,7 @@ function main() {
     writerStyleInput.value = localStorage.getItem('writerStyle') || 'a famous poet';
     const defaultPrompt = `You are an expert in literary styles. Your task is to rewrite the following text in the style of {writerStyle}. The original text is from a work of fiction and may contain mature or sensitive themes. Your goal is purely stylistic transformation; focus on prose, tone, and vocabulary, not the content itself. Do not refuse to perform the task based on the source text's content. Do not add any preamble, warnings, or introductory text. Provide only the rewritten text directly.\n\nORIGINAL TEXT:\n"""\n{originalText}\n"""`;
     customPromptInput.value = localStorage.getItem('customPrompt') || defaultPrompt;
-    geminiModelInput.value = localStorage.getItem('geminiModel') || 'gemini-2.5-flash';
+    geminiModelInput.value = localStorage.getItem('geminiModel') || 'gemini-3-pro-preview';
     geminiApiKeyInput.value = localStorage.getItem('geminiApiKey') || '';
     
     try {
@@ -315,7 +316,7 @@ function main() {
   // --- Model Selector Logic ---
   function populateModelSelector() {
       modelSelector.innerHTML = '';
-      const geminiModel = localStorage.getItem('geminiModel') || 'gemini-2.5-flash';
+      const geminiModel = localStorage.getItem('geminiModel') || 'gemini-3-pro-preview';
       
       const geminiOption = document.createElement('option');
       geminiOption.value = 'google';
@@ -772,7 +773,8 @@ function main() {
 
       try {
           if (selectedModel === 'google') {
-              const modelName = localStorage.getItem('geminiModel');
+              // Default to gemini-3-pro-preview if not set in localStorage (e.g. first run)
+              const modelName = localStorage.getItem('geminiModel') || 'gemini-3-pro-preview';
               const apiKey = localStorage.getItem('geminiApiKey') || '';
               if (!modelName) throw new Error("Gemini model name is not set.");
               await transformWithGeminiStream(prompt, modelName, apiKey, onChunk, signal);
